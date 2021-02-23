@@ -3,8 +3,6 @@
 from Crypto.Cipher import AES
 import hashlib
 
-secret = "1234567891234567"
-
 class CipherManager:
 
     
@@ -111,12 +109,12 @@ def encrypt(message, cipher):
     #加密，返回密文
     plaintext = str(message).encode()#使用utf-8
     plaintext = padding(plaintext)
-    s = cipher.encrypt(plaintext) 	#输入需要加密的字符串，注意字符串长度要是16的倍数
+    s = cipher.encrypt(plaintext)
     return s
 
 
 def read_plaintext(file_path):
-    #从格式化文件读入数据，转为dict
+    #从格式化文件读入数据
     code_dict = dict()
     with open(file_path, "r") as f:
         while True:
