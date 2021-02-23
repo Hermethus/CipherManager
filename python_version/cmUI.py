@@ -1,10 +1,3 @@
-#TODO
-#直接保存，无需另存为
-#未保存提醒
-#备注功能
-#多归属地
-
-
 from ciphermamager import CipherManager
 import hashlib
 from tkinter import *
@@ -18,10 +11,7 @@ class cmUI(Tk):
         super().__init__()
         self.resizable(width=False, height=False)
         self.title("密码管理v1.1")
-        #self.iconbitmap('icon.ico')#窗口左上角图标，无法打包进程序
-                                    #其实可以打包，需要
-                                    #将图片转为base64编码存进.py文件
-                                    #再import再写入.ico文件再删除，很麻烦，没有必要
+
         self.setupUI()
         self.cm = None
         self.current_select = None
