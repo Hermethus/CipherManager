@@ -1,2 +1,2 @@
-# hernethus.github.io
-Hermethus的个人主页
+# CipherManager
+一个简单的密码管理软件
