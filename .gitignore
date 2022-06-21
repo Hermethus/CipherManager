@@ -1,0 +1,10 @@
+/history_version/
+*/__pycache__/
+/.git/
+/ignore/
+
+qt_version/build*
+
+*.exe
+icon.ico
+reminder.txt
