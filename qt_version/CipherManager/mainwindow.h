@@ -5,6 +5,9 @@
 #include <QDockWidget>
 #include <QWidget>
 #include <QVector>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QKeyEvent>
 
 #include "cipherbook.h"
 
@@ -57,6 +60,9 @@ private:
     void mySetupUi();
     void setupActions();
 
+    void openCipherByFilename(const QString& filename);
+    void openPlainByFilename(const QString& filename);
+
     void alterActionsOnOpenFile();
     void alterActionsOnCloseFile();
     void alterActionsOnSelect();
@@ -68,6 +74,14 @@ private:
     void clearSearchTreeView();
     void renewGroupList();
     void renewGroupList(const QString& group);
+
+    void setCurrentPath(const QString* path);
+
+    void dragEnterEvent(QDragEnterEvent *e);
+    void dropEvent(QDropEvent *e);
+    void keyReleaseEvent(QKeyEvent *e);
+
+    void simpleInfoBox(const QString& text);
 };
 
 #endif // MAINWINDOW_H

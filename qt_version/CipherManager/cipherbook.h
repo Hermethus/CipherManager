@@ -21,7 +21,6 @@ public:
     ~CipherBook();
 
     void add(CipherEntry*);
-    void modify(int, CipherEntry*);
     void remove(int);
     CipherEntry* getById(int id);
     QVector<CipherEntry*>* search(const QString&) const;

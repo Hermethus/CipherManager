@@ -70,7 +70,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>500</width>
+        <width>600</width>
         <height>16777215</height>
        </size>
       </property>
@@ -188,22 +188,6 @@
              </widget>
             </item>
            </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="otherNameLabel">
-           <property name="font">
-            <font>
-             <family>等线</family>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>otherName</string>
-           </property>
-           <property name="margin">
-            <number>4</number>
-           </property>
           </widget>
          </item>
          <item>

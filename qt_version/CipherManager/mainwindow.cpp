@@ -18,6 +18,9 @@
 #include <QStandardItem>
 #include <QModelIndex>
 #include <QClipboard>
+#include <QDir>
+#include <QFileInfo>
+#include <QMimeData>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,11 +47,13 @@ MainWindow::~MainWindow()
 void MainWindow::mySetupUi() {
     setWindowIcon(QPixmap(":/icons/icon.png"));
 
+    //取消左侧边栏的title
     QWidget* oldTitle = ui->sideBar->titleBarWidget();
     ui->sideBar->setTitleBarWidget(new QWidget(this));
     delete oldTitle;
 
     this->ui->searchTreeView->setHeaderHidden(true);
+    this->setAcceptDrops(true);
 
     setupActions();
 }
@@ -147,7 +152,6 @@ void MainWindow::alterActionsOnClear() {
 
 void MainWindow::clear(){
     ui->nameLabel->clear();
-    ui->otherNameLabel->clear();
     ui->groupLabel->clear();
     ui->usernameBox->setHidden(true);
     ui->passwordBox->setHidden(true);
@@ -176,11 +180,24 @@ void MainWindow::newFile() {
     alterActionsOnOpenFile();
 }
 
-void MainWindow::openCipher() {
-    closeFile();
+void MainWindow::setCurrentPath(const QString* path = nullptr) {
+    const QString* newPath = path != nullptr ? path : this->filepath != nullptr ? this->filepath : nullptr;
+    if (newPath != nullptr) {
+        QFileInfo fInfo(*newPath);
+        QString dirPath = fInfo.absoluteDir().absolutePath();
+        QDir::setCurrent(dirPath);
+    }
+}
 
+void MainWindow::openCipher() {
     QString filename = QFileDialog::getOpenFileName(this, "打开密码本文件", ".", "*.cipherbook");
     if (!filename.length()) return;
+
+    openCipherByFilename(filename);
+}
+
+void MainWindow::openCipherByFilename(const QString& filename) {
+    closeFile();
 
     PasswordDialog dialog;
     if (!dialog.exec()) return;
@@ -203,16 +220,20 @@ void MainWindow::openCipher() {
     this->groupList = new QStringList();
     renewGroupList();
     this->isSaved = true;
+    setCurrentPath();
 
     alterActionsOnOpenFile();
 }
 
 void MainWindow::openPlain() {
-    closeFile();
 
     QString filename = QFileDialog::getOpenFileName(this, "打开明文文件", ".", "*.json");
     if (!filename.length()) return;
+    openPlainByFilename(filename);
+}
 
+void MainWindow::openPlainByFilename(const QString& filename) {
+    closeFile();
     QJsonObject json = CipherUtil::readPlainFileAndDecode(filename);
 
     CipherBook* newCipherBook = new CipherBook(json);
@@ -231,10 +252,12 @@ void MainWindow::openPlain() {
     this->groupList = new QStringList();
     renewGroupList();
     this->isSaved = false;
+    setCurrentPath(&filename);
 
     alterActionsOnOpenFile();
 }
 
+//更新分组列表
 void MainWindow::renewGroupList() {
     QSet<QString> qset;
     for (auto it=cipherBook->book->begin(); it!=cipherBook->book->end(); it++) {
@@ -254,19 +277,24 @@ void MainWindow::renewGroupList(const QString& group) {
     groupList->append(group);
 }
 
-void MainWindow::save(){
+void MainWindow::simpleInfoBox(const QString& text) {
+    QMessageBox info(QMessageBox::NoIcon, QString("信息"), text, QMessageBox::Ok, this);
+    info.exec();
+}
+
+void MainWindow::save() {
     if (isSaved) return;
     if (filepath != nullptr) {
         QJsonObject* json = cipherBook->toJSON();
         CipherUtil::encodeAndSave(json, *key, *filepath);
-        QMessageBox::information(this, "信息", "保存成功！");
+        simpleInfoBox(QString("保存成功！"));
         isSaved = true;
         delete json;
     } else {
         saveAsCipher();
     }
 }
-void MainWindow::saveAsCipher(){
+void MainWindow::saveAsCipher() {
     QString filename = QFileDialog::getSaveFileName(this, "保存密码本文件", ".", "*.cipherbook");
     if (!filename.length()) return;
 
@@ -275,10 +303,11 @@ void MainWindow::saveAsCipher(){
     if (filepath == nullptr) {
         filepath = new QString(filename);
         isSaved = true;
+        setCurrentPath();
     } else if (filepath->compare(filename) == 0) {
         isSaved = true;
     }
-    QMessageBox::information(this, "信息", "保存成功！");
+    simpleInfoBox(QString("保存成功！"));
 
     delete json;
 }
@@ -289,7 +318,8 @@ void MainWindow::saveAsPlain() {
     QJsonObject* json = this->cipherBook->toJSON();
     CipherUtil::savePlainJson(json, filename);
 
-    QMessageBox::information(this, "信息", "明文导出成功！");
+    simpleInfoBox(QString("明文导出成功！"));
+    setCurrentPath(&filename);
     delete json;
 }
 void MainWindow::closeFile(){
@@ -323,7 +353,7 @@ void MainWindow::closeEvent(QCloseEvent*) {
     exitExe();
 }
 
-void MainWindow::changePassword(){
+void MainWindow::changePassword() {
     ChangePasswordDialog dialog(*key ,this);
 
     if (!dialog.exec()) return;
@@ -331,7 +361,7 @@ void MainWindow::changePassword(){
 
     QByteArray* newKey = new QByteArray(CipherUtil::getSHA256(newKeyStr.toLocal8Bit()));
     key = newKey;
-    QMessageBox::information(this, "信息", "密码修改成功！");
+    simpleInfoBox(QString("密码修改成功！"));
     isSaved = false;
 }
 void MainWindow::addEntry() {
@@ -356,22 +386,26 @@ void MainWindow::alterEntry() {
     if (!dialog.exec()) return;
 
     CipherEntry* entry = dialog.getEntry();
-    cipherBook->modify(id, entry);
 
     QVector<CipherEntry*>* list = new QVector<CipherEntry*>();
     list->append(entry);
     renewGroupList(entry->getGroup());
     updateSearchTreeView(list);
     isSaved = false;
+    clear();
 }
-void MainWindow::deleteEntry(){
+void MainWindow::deleteEntry() {
     QModelIndex index = ui->searchTreeView->currentIndex();
     int id = *(int*)(ui->searchTreeView->model()->data(index, Qt::UserRole + 1).data());
     CipherEntry* tmp = cipherBook->getById(id);
 
-    int ret = QMessageBox::question(this, "警告", QString("确认删除：%1（%2）吗？")
-                                                .arg(tmp->getName())
-                                                .arg(tmp->getOtherName()));
+    QString text("确认删除：");
+    text.append(tmp->getName());
+    if (tmp->getOtherName().length() > 0) {
+        text.append(QString("（%1）").arg(tmp->getOtherName()));
+    }
+    text.append("吗？");
+    int ret = QMessageBox::question(this, "警告", text);
     if (ret == QMessageBox::StandardButton::No) return;
 
     cipherBook->remove(id);
@@ -380,24 +414,22 @@ void MainWindow::deleteEntry(){
     clear();
 }
 
-void MainWindow::help(){
+void MainWindow::help() {
     LongInfoDialog dialog("帮助", this);
     dialog.exec();
 }
-void MainWindow::about(){
+void MainWindow::about() {
     LongInfoDialog dialog("关于我", this);
     dialog.exec();
 }
 
-void MainWindow::copyUsername(){
+void MainWindow::copyUsername() {
     if (ui->usernameEdit->text().length() == 0) return;
     QApplication::clipboard()->setText(ui->usernameEdit->text());
-    QMessageBox::information(this, "信息", "用户名复制成功！");
 }
 void MainWindow::copyPassword(){
     if (ui->passwordEdit->text().length() == 0) return;
     QApplication::clipboard()->setText(ui->passwordEdit->text());
-    QMessageBox::information(this, "信息", "密码复制成功！");
 }
 void MainWindow::search() {
     QString str = this->ui->searchEdit->displayText().trimmed();
@@ -447,12 +479,14 @@ void MainWindow::updateSearchTreeView(QVector<CipherEntry*>* list) {
 
 void MainWindow::clickedAtIndex(const QModelIndex& index) {
     QVariant v = index.data(Qt::UserRole + 1);
-    if (v.isNull()) return;
+    if (v.isNull()) {
+        clear();
+        return;
+    }
     int id = *(int*)(v.data());
     CipherEntry* entry = cipherBook->getById(id);
 
     ui->nameLabel->setText(entry->getName());
-    ui->otherNameLabel->setText(entry->getOtherName());
     ui->groupLabel->setText(entry->getGroup());
     ui->usernameBox->setHidden(false);
     ui->usernameEdit->setText(entry->getUsername());
@@ -465,4 +499,29 @@ void MainWindow::clickedAtIndex(const QModelIndex& index) {
     ui->clearButton->setStyleSheet("color:red;");
 
     alterActionsOnSelect();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
+    QString filename = e->mimeData()->urls()[0].fileName();
+    if (filename.endsWith(".cipherbook") || filename.endsWith(".json")) {
+        e->acceptProposedAction();
+    } else {
+        e->ignore();
+    }
+}
+void MainWindow::dropEvent(QDropEvent *e) {
+    QString filename = e->mimeData()->urls()[0].toLocalFile();
+    if (filename.endsWith(".cipherbook")) {
+        openCipherByFilename(filename);
+    } else if (filename.endsWith(".json")) {
+        openPlainByFilename(filename);
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *e) {
+    if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
+        if (ui->searchEdit->text().length()) {
+            search();
+        }
+    }
 }

@@ -45,7 +45,7 @@ void CipherUtil::encodeAndSave(QJsonObject* obj, const QByteArray& key, const QS
     CipherUtil::saveBytesToFile(encoded, filepath);
 }
 
-QByteArray CipherUtil::readTextFile(QString& filepath) {
+QByteArray CipherUtil::readTextFile(const QString& filepath) {
     QFile f(filepath);
     f.open(QFile::ReadOnly|QFile::Text);
     QByteArray ret = f.readAll();
@@ -53,12 +53,12 @@ QByteArray CipherUtil::readTextFile(QString& filepath) {
     return ret;
 }
 
-QJsonObject CipherUtil::toJsonObj(QByteArray& rawJson){
+QJsonObject CipherUtil::toJsonObj(QByteArray& rawJson) {
     QJsonDocument qjd = QJsonDocument::fromJson(rawJson);
     return qjd.object();
 }
 
-QJsonObject CipherUtil::readPlainFileAndDecode(QString& filepath) {
+QJsonObject CipherUtil::readPlainFileAndDecode(const QString& filepath) {
     QByteArray raw = readTextFile(filepath);
     return toJsonObj(raw);
 }
@@ -71,7 +71,7 @@ void CipherUtil::saveBytesToFile(const QByteArray& content, const QString& filep
     f.close();
 }
 
-QByteArray CipherUtil::readBinaryFile(QString& filepath) {
+QByteArray CipherUtil::readBinaryFile(const QString& filepath) {
     QFile f(filepath);
     f.open(QFile::ReadOnly);
     QDataStream in(&f);
@@ -80,7 +80,7 @@ QByteArray CipherUtil::readBinaryFile(QString& filepath) {
     return ret;
 }
 
-QJsonObject CipherUtil::readBinaryFileAndDecode(QString& filepath, QByteArray& key) {
+QJsonObject CipherUtil::readBinaryFileAndDecode(const QString& filepath, QByteArray& key) {
     QByteArray raw = readBinaryFile(filepath);
     QByteArray decoded = decode(raw, key);
     return toJsonObj(decoded);

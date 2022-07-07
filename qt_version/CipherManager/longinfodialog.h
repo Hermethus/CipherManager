@@ -17,6 +17,7 @@ public:
 
 private:
     Ui::LongInfoDialog *ui;
+    void setLongData();
 };
 
 #endif // LONGINFODIALOG_H

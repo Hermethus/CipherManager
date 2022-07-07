@@ -5,6 +5,7 @@
 
 qt_version/build*
 
+*.zip
 *.exe
-icon.ico
+*.ico
 reminder.txt

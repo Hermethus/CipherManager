@@ -3,6 +3,7 @@
 
 CipherBook::CipherBook()
     :globalId(1)
+    //globalId从1开始
 {
     this->book = new QMap<int, CipherEntry*>();
 }
@@ -14,6 +15,7 @@ CipherBook::CipherBook(int globalId)
 }
 
 CipherBook::CipherBook(QJsonObject& obj) {
+    //此处如果globalId为0则表示读入出错
     this->globalId = obj["globalId"].toString().toInt();
     this->book = new QMap<int, CipherEntry*>();
 
@@ -51,16 +53,9 @@ void CipherBook::add(CipherEntry* obj) {
     globalId++;
 }
 
-//成功返回0，否则返回-1
 void CipherBook::remove(int id) {
     CipherEntry* tmp = this->book->take(id);
     delete tmp;
-}
-
-//由于直接进行指针操作，无须在此处额外修改
-void CipherBook::modify(int id, CipherEntry* obj) {
-    Q_ASSERT(this->book->contains(id));
-    Q_ASSERT(obj->getId() == id);
 }
 
 CipherEntry* CipherBook::getById(int id){
