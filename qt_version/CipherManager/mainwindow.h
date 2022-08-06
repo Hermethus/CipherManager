@@ -8,6 +8,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QKeyEvent>
+#include <QLabel>
 
 #include "cipherbook.h"
 
@@ -57,19 +58,27 @@ private:
     QStringList* groupList;
     bool isSaved;
 
+    QLabel* globalIdLabel;
+    QLabel* tipsLabel;
+    QLabel* lastModifiedLabel;
+
     void mySetupUi();
     void setupActions();
 
     void openCipherByFilename(const QString& filename);
     void openPlainByFilename(const QString& filename);
 
+    //UI按键
     void alterActionsOnOpenFile();
     void alterActionsOnCloseFile();
     void alterActionsOnSelect();
     void alterActionsOnClear();
+    void updateModifiedWhenSave();
+    void clearRight();
 
     void closeEvent(QCloseEvent*);
 
+    //左侧边栏
     void updateSearchTreeView(QVector<CipherEntry*>*);
     void clearSearchTreeView();
     void renewGroupList();
@@ -82,6 +91,7 @@ private:
     void keyReleaseEvent(QKeyEvent *e);
 
     void simpleInfoBox(const QString& text);
+    void actionSuccessTips(const QString& text);
 };
 
 #endif // MAINWINDOW_H

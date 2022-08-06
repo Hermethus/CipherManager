@@ -221,6 +221,20 @@
        </widget>
       </item>
      </layout>
+     <zorder>passwordEdit</zorder>
+     <zorder>remarksEdit</zorder>
+     <zorder>nameEdit</zorder>
+     <zorder>label</zorder>
+     <zorder>label_3</zorder>
+     <zorder>label_5</zorder>
+     <zorder>label_4</zorder>
+     <zorder>usernameEdit</zorder>
+     <zorder>confirmEdit</zorder>
+     <zorder>label_7</zorder>
+     <zorder>label_6</zorder>
+     <zorder>otherNameEdit</zorder>
+     <zorder>label_2</zorder>
+     <zorder>groupEdit</zorder>
     </widget>
    </item>
    <item>
@@ -263,6 +277,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>nameEdit</tabstop>
+  <tabstop>otherNameEdit</tabstop>
+  <tabstop>usernameEdit</tabstop>
+  <tabstop>passwordEdit</tabstop>
+  <tabstop>confirmEdit</tabstop>
+  <tabstop>groupEdit</tabstop>
+  <tabstop>remarksEdit</tabstop>
+  <tabstop>OKButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -19,10 +19,13 @@ public:
     QString getPassword();
     QString getRemarks();
     QString getGroup();
+    QString getLastModified();
     bool containsKeyWord(const QString&) const;
     void setId(int);
+    void setLastModified();
     void setAllProperty(const QString& name, const QString& otherName, const QString& username,
-                        const QString& password, const QString& remarks, const QString& group);
+                        const QString& password, const QString& remarks, const QString& group,
+                        const QString& lastModified = QString(""));
     QJsonObject toJson();
 
 private:
@@ -33,6 +36,7 @@ private:
     QString password;
     QString remarks;
     QString group;
+    QString lastModified;
 
 signals:
 
