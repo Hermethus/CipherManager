@@ -34,6 +34,9 @@ public slots:
     void closeFile();
     void exitExe();
 
+    void openCipherByFilename(const QString& filename);
+    void openPlainByFilename(const QString& filename);
+
     void changePassword();
     void addEntry();
     void alterEntry();
@@ -65,9 +68,6 @@ private:
     void mySetupUi();
     void setupActions();
 
-    void openCipherByFilename(const QString& filename);
-    void openPlainByFilename(const QString& filename);
-
     //UI按键
     void alterActionsOnOpenFile();
     void alterActionsOnCloseFile();
@@ -85,6 +85,7 @@ private:
     void renewGroupList(const QString& group);
 
     void setCurrentPath(const QString* path);
+    bool testWritable(const QString path);
 
     void dragEnterEvent(QDragEnterEvent *e);
     void dropEvent(QDropEvent *e);

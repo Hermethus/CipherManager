@@ -55,14 +55,14 @@ void MainWindow::mySetupUi() {
     this->ui->searchTreeView->setHeaderHidden(true);
     this->setAcceptDrops(true);
 
+    //状态栏
     QStatusBar* statusBar = this->statusBar();
     setStatusBar(statusBar);
-
-    this->globalIdLabel = new QLabel();
+    this->globalIdLabel = new QLabel(this);
     statusBar->addWidget(this->globalIdLabel);
-    this->lastModifiedLabel = new QLabel();
+    this->lastModifiedLabel = new QLabel(this);
     statusBar->addWidget(this->lastModifiedLabel);
-    this->tipsLabel = new QLabel();
+    this->tipsLabel = new QLabel(this);
     statusBar->addPermanentWidget(this->tipsLabel);
 
     setupActions();
@@ -217,12 +217,27 @@ void MainWindow::setCurrentPath(const QString* path = nullptr) {
     }
 }
 
+bool MainWindow::testWritable(const QString path = QString()) {
+    QFileInfo fi;
+    if (path.length() > 0) {
+        fi = QFileInfo(*(this->filepath));
+    } else {
+        fi = QFileInfo(path);
+    }
+    return fi.isWritable();
+}
+
 //打开密码本文件
 void MainWindow::openCipher() {
     QString filename = QFileDialog::getOpenFileName(this, "打开密码本文件", ".", "*.cipherbook");
     if (!filename.length()) return;
 
-    openCipherByFilename(filename);
+    QFileInfo fi = QFileInfo(filename);
+    if (fi.isReadable()) {
+        openCipherByFilename(filename);
+    } else {
+        QMessageBox::critical(this, "错误", "文件无法读取！");
+    }
 }
 void MainWindow::openCipherByFilename(const QString& filename) {
     closeFile();
@@ -257,7 +272,13 @@ void MainWindow::openCipherByFilename(const QString& filename) {
 void MainWindow::openPlain() {
     QString filename = QFileDialog::getOpenFileName(this, "打开明文文件", ".", "*.json");
     if (!filename.length()) return;
-    openPlainByFilename(filename);
+
+    QFileInfo fi = QFileInfo(filename);
+    if (fi.isReadable()) {
+        openPlainByFilename(filename);
+    } else {
+        QMessageBox::critical(this, "错误", "文件无法读取！");
+    }
 }
 void MainWindow::openPlainByFilename(const QString& filename) {
     closeFile();
@@ -321,7 +342,10 @@ void MainWindow::updateModifiedWhenSave() {
 void MainWindow::save() {
     if (isSaved) return;
     if (filepath != nullptr) {
-        updateModifiedWhenSave();///TODO: 异常处理，有可能保存失败
+        if (!testWritable()) {
+            QMessageBox::critical(this, "错误", "文件无法写入！");
+        }
+        updateModifiedWhenSave();
         QJsonObject* json = cipherBook->toJSON();
         CipherUtil::encodeAndSave(json, *key, *filepath);
         simpleInfoBox(QString("保存成功！"));
@@ -335,7 +359,10 @@ void MainWindow::saveAsCipher() {
     QString filename = QFileDialog::getSaveFileName(this, "保存密码本文件", ".", "*.cipherbook");
     if (!filename.length()) return;
 
-    updateModifiedWhenSave();///TODO: 异常处理
+    if (!testWritable(filename)) {
+        QMessageBox::critical(this, "错误", "文件无法写入！");
+    }
+    updateModifiedWhenSave();
     QJsonObject* json = cipherBook->toJSON();
     CipherUtil::encodeAndSave(json, *key, filename);
 
@@ -353,6 +380,10 @@ void MainWindow::saveAsCipher() {
 void MainWindow::saveAsPlain() {
     QString filename = QFileDialog::getSaveFileName(this, "导出明文", ".", "*.json");
     if (!filename.length()) return;
+
+    if (!testWritable(filename)) {
+        QMessageBox::critical(this, "错误", "文件无法写入！");
+    }
 
     QJsonObject* json = this->cipherBook->toJSON();
     CipherUtil::savePlainJson(json, filename);
@@ -528,7 +559,7 @@ void MainWindow::updateSearchTreeView(QVector<CipherEntry*>* list) {
 
 void MainWindow::clickedAtIndex(const QModelIndex& index) {
     QVariant v = index.data(Qt::UserRole + 1);
-    if (v.isNull()) {
+    if (v.isNull()) {//点击位置不对应数据
         clearRight();
         return;
     }
