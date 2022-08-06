@@ -1,30 +1,28 @@
 ﻿#include "cipherutil.h"
 
+#include <QDebug>
+
 CipherUtil::CipherUtil() {
 }
 CipherUtil::~CipherUtil() {
 }
 
 
-QByteArray CipherUtil::getSHA256(QByteArray input) {
+QByteArray CipherUtil::getSaveHash(QByteArray input) {
     QByteArray qb;
-    qb.append(QCryptographicHash::hash(input, QCryptographicHash::Md5));
-    qb.append(QCryptographicHash::hash(input, QCryptographicHash::Sha224));
-    return QCryptographicHash::hash(qb, QCryptographicHash::Sha256);
+    qb.append(QCryptographicHash::hash(input, QCryptographicHash::Keccak_512));
+    qb.append(QCryptographicHash::hash(input, QCryptographicHash::RealSha3_512));
+    return QCryptographicHash::hash(qb, QCryptographicHash::Sha3_256);
 }
 
 QByteArray CipherUtil::encode(QByteArray& plainText, const QByteArray& key) {
-    QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::ECB);
-    return encryption.encode(plainText, key);
+    QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::OFB);
+    return encryption.encode(plainText, key, iv);
 }
-QByteArray CipherUtil::decode(QByteArray& encodedText, QByteArray& key) {
-    QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::ECB);
-    QByteArray decodedText = encryption.decode(encodedText, key);
+QByteArray CipherUtil::decode(QByteArray& encodedText, const QByteArray& key) {
+    QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::OFB);
+    QByteArray decodedText = encryption.decode(encodedText, key, iv);
     return encryption.removePadding(decodedText);
-}
-
-QByteArray CipherUtil::getPlainJson(QJsonObject* obj) {
-    return QJsonDocument(*obj).toJson();
 }
 
 void CipherUtil::saveTextToFile(const QByteArray& content, QString& filepath) {
@@ -53,6 +51,11 @@ QByteArray CipherUtil::readTextFile(const QString& filepath) {
     return ret;
 }
 
+//将JSON对象转为JSON字符串
+QByteArray CipherUtil::getPlainJson(QJsonObject* obj) {
+    return QJsonDocument(*obj).toJson();
+}
+//将JSON字符串转为JSON对象
 QJsonObject CipherUtil::toJsonObj(QByteArray& rawJson) {
     QJsonDocument qjd = QJsonDocument::fromJson(rawJson);
     return qjd.object();

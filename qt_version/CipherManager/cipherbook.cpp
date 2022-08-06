@@ -1,23 +1,31 @@
 ﻿#include "cipherbook.h"
-#include <QDebug>
+
+#include <QDate>
+#include <QTime>
 
 CipherBook::CipherBook()
     :globalId(1)
     //globalId从1开始
 {
     this->book = new QMap<int, CipherEntry*>();
+    this->setLastModified();
 }
 
 CipherBook::CipherBook(int globalId)
     :globalId(globalId)
 {
     this->book = new QMap<int, CipherEntry*>();
+    this->setLastModified();
 }
-
+//从json对象读入
 CipherBook::CipherBook(QJsonObject& obj) {
     //此处如果globalId为0则表示读入出错
     this->globalId = obj["globalId"].toString().toInt();
     this->book = new QMap<int, CipherEntry*>();
+    this->lastModified = obj["lastModified"].toString();
+    if (this->lastModified.length() == 0) {
+        setLastModified();
+    }
 
     for(auto it=obj.begin(); it!=obj.end(); it++) {
         int id = it.key().toInt();
@@ -30,7 +38,8 @@ CipherBook::CipherBook(QJsonObject& obj) {
                     properties["username"].toString(),
                     properties["password"].toString(),
                     properties["remarks"].toString(),
-                    properties["group"].toString());
+                    properties["group"].toString(),
+                    properties["lastModified"].toString());
         if (entry->getName().length() == 0) {
             this->globalId = 0;
             return;
@@ -44,6 +53,19 @@ CipherBook::~CipherBook() {
         delete it.value();
     }
     delete book;
+}
+
+int CipherBook::getGlobalId() {
+    return globalId;
+}
+
+QString CipherBook::getLastModified() {
+    return lastModified;
+}
+void CipherBook::setLastModified() {
+    QString data = QDate::currentDate().toString("yyyy-M-d");
+    QString time = QTime::currentTime().toString("hh:mm:ss");
+    this->lastModified = data.append(" ").append(time);
 }
 
 
@@ -88,6 +110,7 @@ QVector<CipherEntry*>* CipherBook::search(const QString& keyWord) const {
 QJsonObject* CipherBook::toJSON() {
     QJsonObject* ret = new QJsonObject();
     ret->insert(QString("globalId"), QString::number(this->globalId));
+    ret->insert(QString("lastModified"), this->getLastModified());
 
     for (auto it=this->book->begin(); it!=this->book->end(); it++) {
         ret->insert(QString::number(it.key()), it.value()->toJson());

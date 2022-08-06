@@ -25,7 +25,7 @@ void ChangePasswordDialog::check() {
     QString input = ui->newPasswordEdit->text();
     QString confirm = ui->confirmPasswordEdit->text();
 
-    QByteArray old256 = CipherUtil::getSHA256(old.toLocal8Bit());
+    QByteArray old256 = CipherUtil::getSaveHash(old.toLocal8Bit());
 
     if (!input.length() || !confirm.length() || !old.length()) {
         QMessageBox::critical(this, "错误", "密码不能为空！");
