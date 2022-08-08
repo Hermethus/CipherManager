@@ -216,17 +216,6 @@ void MainWindow::setCurrentPath(const QString* path = nullptr) {
         QDir::setCurrent(dirPath);
     }
 }
-
-bool MainWindow::testWritable(const QString path = QString()) {
-    QFileInfo fi;
-    if (path.length() > 0) {
-        fi = QFileInfo(*(this->filepath));
-    } else {
-        fi = QFileInfo(path);
-    }
-    return fi.isWritable();
-}
-
 //打开密码本文件
 void MainWindow::openCipher() {
     QString filename = QFileDialog::getOpenFileName(this, "打开密码本文件", ".", "*.cipherbook");
@@ -342,9 +331,6 @@ void MainWindow::updateModifiedWhenSave() {
 void MainWindow::save() {
     if (isSaved) return;
     if (filepath != nullptr) {
-        if (!testWritable()) {
-            QMessageBox::critical(this, "错误", "文件无法写入！");
-        }
         updateModifiedWhenSave();
         QJsonObject* json = cipherBook->toJSON();
         CipherUtil::encodeAndSave(json, *key, *filepath);
@@ -359,9 +345,6 @@ void MainWindow::saveAsCipher() {
     QString filename = QFileDialog::getSaveFileName(this, "保存密码本文件", ".", "*.cipherbook");
     if (!filename.length()) return;
 
-    if (!testWritable(filename)) {
-        QMessageBox::critical(this, "错误", "文件无法写入！");
-    }
     updateModifiedWhenSave();
     QJsonObject* json = cipherBook->toJSON();
     CipherUtil::encodeAndSave(json, *key, filename);
@@ -380,10 +363,6 @@ void MainWindow::saveAsCipher() {
 void MainWindow::saveAsPlain() {
     QString filename = QFileDialog::getSaveFileName(this, "导出明文", ".", "*.json");
     if (!filename.length()) return;
-
-    if (!testWritable(filename)) {
-        QMessageBox::critical(this, "错误", "文件无法写入！");
-    }
 
     QJsonObject* json = this->cipherBook->toJSON();
     CipherUtil::savePlainJson(json, filename);

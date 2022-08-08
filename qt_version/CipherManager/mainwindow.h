@@ -85,7 +85,6 @@ private:
     void renewGroupList(const QString& group);
 
     void setCurrentPath(const QString* path);
-    bool testWritable(const QString path);
 
     void dragEnterEvent(QDragEnterEvent *e);
     void dropEvent(QDropEvent *e);
